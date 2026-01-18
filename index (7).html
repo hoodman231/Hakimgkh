@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรแกรมคำนวณกำไรทอง</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; min-height: 100vh; padding-bottom: 100px; }
+        .header { background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%); padding: 25px 20px; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header-content { max-width: 600px; margin: 0 auto; }
+        .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 5px; }
+        .header p { font-size: 14px; opacity: 0.9; }
+        .toggle-container { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.15); padding: 12px 16px; border-radius: 12px; margin-top: 15px; }
+        .toggle-label { font-size: 15px; font-weight: 500; }
+        .switch { position: relative; width: 54px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.3); transition: .3s; border-radius: 28px; }
+        .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .slider { background-color: #4CAF50; }
+        input:checked + .slider:before { transform: translateX(26px); }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+        .tab { padding: 14px 8px; background: white; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; color: #666; }
+        .tab.active { background: #FF6B35; border-color: #FF6B35; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .card { background: white; border-radius: 16px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px; }
+        .form-input { width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; transition: border 0.2s; background: #fafafa; }
+        .form-input:focus { outline: none; border-color: #FF6B35; background: white; }
+        .weight-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
+        .weight-item { padding: 16px; background: #fafafa; border: 2px solid #e0e0e0; border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .weight-item:active { transform: scale(0.98); }
+        .weight-item.selected { background: #FFF4F0; border-color: #FF6B35; }
+        .weight-name { font-weight: 600; color: #333; margin-bottom: 4px; font-size: 15px; }
+        .weight-detail { font-size: 12px; color: #999; }
+        .sub-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; background: #f8f9fa; padding: 8px; border-radius: 12px; }
+        .sub-tab { padding: 12px; background: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; color: #666; }
+        .sub-tab.active { background: #FF6B35; color: white; }
+        .btn-calculate { width: 100%; padding: 18px; background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%); color: white; border: none; border-radius: 12px; font-size: 17px; font-weight: 600; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(255,107,53,0.3); }
+        .btn-calculate:active { transform: scale(0.98); }
+        .result-card { display: none; background: white; border-radius: 16px; padding: 24px; margin-top: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .result-card.show { display: block; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .result-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+        .result-row:last-child { border-bottom: none; }
+        .result-label { font-size: 14px; color: #666; }
+        .result-value { font-size: 14px; font-weight: 600; color: #333; }
+        .profit-box { background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; margin-top: 16px; }
+        .profit-label { font-size: 13px; opacity: 0.9; margin-bottom: 8px; }
+        .profit-value { font-size: 32px; font-weight: 700; }
+        .warning-box { background: #FFF3CD; border: 2px solid #FFD700; color: #856404; padding: 16px; border-radius: 12px; margin-top: 16px; }
+        .warning-title { font-weight: 600; margin-bottom: 8px; font-size: 15px; }
+        .warning-text { font-size: 14px; line-height: 1.5; }
+        .info-text { font-size: 12px; color: #999; margin-top: 6px; }
+        .summary-fab { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%); border-radius: 50%; display: none; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: 700; box-shadow: 0 4px 20px rgba(255,107,53,0.4); cursor: pointer; z-index: 1000; }
+        .summary-fab.active { display: flex; }
+        .summary-panel { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-radius: 24px 24px 0 0; padding: 24px; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); transform: translateY(100%); transition: transform 0.3s ease; max-height: 70vh; overflow-y: auto; z-index: 1001; }
+        .summary-panel.show { transform: translateY(0); }
+        .summary-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .summary-title { font-size: 20px; font-weight: 700; color: #333; }
+        .summary-actions { display: flex; gap: 8px; }
+        .btn-close { width: 32px; height: 32px; border-radius: 50%; background: #f0f0f0; border: none; cursor: pointer; font-size: 20px; color: #666; }
+        .btn-clear { background: #FF4757; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .btn-download { background: #4CAF50; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .summary-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .stat-box { background: #f8f9fa; padding: 16px; border-radius: 12px; text-align: center; }
+        .stat-label { font-size: 12px; color: #666; margin-bottom: 6px; }
+        .stat-value { font-size: 20px; font-weight: 700; }
+        .stat-value.sell { color: #FF6B35; }
+        .stat-value.buy { color: #4CAF50; }
+        .summary-total { background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
+        .summary-total-label { font-size: 14px; opacity: 0.9; margin-bottom: 8px; }
+        .summary-total-value { font-size: 36px; font-weight: 700; }
+        .transaction-item { background: #fafafa; padding: 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .transaction-info { flex: 1; }
+        .transaction-type { font-weight: 600; color: #333; margin-bottom: 4px; font-size: 15px; }
+        .transaction-weight { font-size: 13px; color: #999; }
+        .transaction-date { font-size: 11px; color: #999; margin-top: 4px; }
+        .transaction-profit { font-size: 18px; font-weight: 700; margin-right: 12px; }
+        .transaction-profit.positive { color: #4CAF50; }
+        .transaction-profit.negative { color: #FF4757; }
+        .btn-delete { background: #FF6B6B; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #999; }
+        .empty-icon { font-size: 48px; margin-bottom: 12px; }
+        @media (max-width: 480px) { .tabs { grid-template-columns: repeat(2, 1fr); } .weight-grid { grid-template-columns: 1fr; } .transaction-item { flex-direction: column; align-items: flex-start; gap: 12px; } .transaction-profit { margin-right: 0; } .summary-stats { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>💰 คำนวณกำไรทอง</h1>
+            <p>ระบบคำนวณแม่นยำ ใช้งานง่าย</p>
+            <div class="toggle-container">
+                <span class="toggle-label">📊 เปิดใช้งานรวมยอด</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-summary" onchange="toggleSummary()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" id="tab-sell" onclick="switchTab('sell')">ขายออก</button>
+            <button class="tab" id="tab-buy" onclick="switchTab('buy')">ซื้อเข้า</button>
+            <button class="tab" id="tab-service" onclick="switchTab('service')">บริการ</button>
+        </div>
+
+        <!-- ขายออก -->
+        <div id="content-sell" class="tab-content active">
+            <div class="card">
+                <div class="form-group">
+                    <label class="form-label">ราคาทองแท่ง (ข้างบน - ขาย)</label>
+                    <input type="number" class="form-input" id="sell-price-top" placeholder="เช่น 65100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ราคาทองแท่ง (ข้างล่าง - ซื้อ)</label>
+                    <input type="number" class="form-input" id="sell-price-bottom" placeholder="เช่น 65000">
+                    <div class="info-text">ต้องน้อยกว่าข้างบน 100 บาท</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">เลือกน้ำหนักทอง</label>
+                    <div class="weight-grid" id="sell-weight-grid"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ลายพิเศษ +เพิ่ม (บาท)</label>
+                    <input type="number" class="form-input" id="sell-special" placeholder="ถ้าไม่มีใส่ 0" value="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ราคาที่ขายออก (บาท)</label>
+                    <input type="number" class="form-input" id="sell-price-out" placeholder="ระบุราคาที่ขายให้ลูกค้า">
+                </div>
+                <button class="btn-calculate" onclick="calculateSell()">คำนวณกำไร</button>
+            </div>
+            <div id="sell-result" class="result-card"></div>
+        </div>
+
+        <!-- ซื้อเข้า -->
+        <div id="content-buy" class="tab-content">
+            <div class="card">
+                <div class="form-group">
+                    <label class="form-label">ราคาทองแท่ง (ข้างล่าง - ซื้อ)</label>
+                    <input type="number" class="form-input" id="buy-price-bottom" placeholder="เช่น 65000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">เลือกน้ำหนักทอง</label>
+                    <div class="weight-grid" id="buy-weight-grid"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">น้ำหนักจริง (กรัม)</label>
+                    <input type="number" class="form-input" id="buy-actual-weight" placeholder="ระบุน้ำหนักที่ชั่งได้" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ราคาที่รับซื้อจากลูกค้า (บาท)</label>
+                    <input type="number" class="form-input" id="buy-price-in" placeholder="ระบุราคาที่รับซื้อมา">
+                </div>
+                <button class="btn-calculate" onclick="calculateBuy()">คำนวณกำไร</button>
+            </div>
+            <div id="buy-result" class="result-card"></div>
+        </div>
+
+        <!-- บริการ -->
+        <div id="content-service" class="tab-content">
+            <div class="sub-tabs">
+                <button class="sub-tab active" id="subtab-exchange" onclick="switchServiceTab('exchange')">เปลี่ยนลาย</button>
+                <button class="sub-tab" id="subtab-addweight" onclick="switchServiceTab('addweight')">เพิ่มน้ำหนัก</button>
+            </div>
+
+            <!-- เปลี่ยนลาย -->
+            <div id="service-exchange">
+                <div class="card">
+                    <div class="form-group">
+                        <label class="form-label">ราคาทองวันนี้ (ข้างบน - ขาย)</label>
+                        <input type="number" class="form-input" id="ex-gold-top" placeholder="เช่น 68450">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">ราคาทองวันนี้ (ข้างล่าง - ซื้อ)</label>
+                        <input type="number" class="form-input" id="ex-gold-bottom" placeholder="เช่น 68350">
+                        <div class="info-text">ต้องน้อยกว่าข้างบน 100 บาท</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">เลือกน้ำหนัก (ต้องเท่ากัน)</label>
+                        <div class="weight-grid" id="ex-weight-grid"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">น้ำหนักจริงของเก่า (กรัม)</label>
+                        <input type="number" class="form-input" id="ex-actual-weight" placeholder="ระบุน้ำหนักที่ชั่งได้" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">ราคาเปลี่ยนที่เก็บ (บาท)</label>
+                        <input type="number" class="form-input" id="ex-price" placeholder="ระบุราคาเปลี่ยนลาย">
+                    </div>
+                    <button class="btn-calculate" onclick="calculateExchange()">คำนวณกำไร</button>
+                </div>
+                <div id="ex-result" class="result-card"></div>
+            </div>
+
+            <!-- เพิ่มน้ำหนัก -->
+            <div id="service-addweight" style="display:none;">
+                <div class="card">
+                    <div class="form-group">
+                        <label class="form-label">ราคาทองวันรับของเก่า (ล่าง - ซื้อ)</label>
+                        <input type="number" class="form-input" id="add-gold-old-bottom" placeholder="เช่น 68350">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">น้ำหนักรวมของเก่า (กรัม)</label>
+                        <input type="number" class="form-input" id="add-weight-old" placeholder="ระบุน้ำหนักรวม" step="0.01">
+                        <div class="info-text">ถ้ามีหลายชิ้น ให้รวมทั้งหมด</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">ราคาทองวันทำใหม่ (บน - ขาย)</label>
+                        <input type="number" class="form-input" id="add-gold-new-top" placeholder="เช่น 68450">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">เลือกน้ำหนักใหม่</label>
+                        <div class="weight-grid" id="add-weight-grid"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">ราคาเพิ่มน้ำหนักที่เก็บ (บาท)</label>
+                        <input type="number" class="form-input" id="add-price" placeholder="ระบุราคา">
+                    </div>
+                    <button class="btn-calculate" onclick="calculateAddWeight()">คำนวณกำไร</button>
+                </div>
+                <div id="add-result" class="result-card"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="summary-fab" id="summary-fab" onclick="showSummary()">
+        <span id="fab-count">0</span>
+    </div>
+
+    <div class="summary-panel" id="summary-panel">
+        <div class="summary-header">
+            <span class="summary-title">📊 สรุปยอดรวม</span>
+            <div class="summary-actions">
+                <button class="btn-download" onclick="downloadReport()">📥</button>
+                <button class="btn-clear" onclick="clearAll()">ล้าง</button>
+                <button class="btn-close" onclick="hideSummary()">×</button>
+            </div>
+        </div>
+        <div style="background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 16px;">
+            <label style="font-size: 13px; color: #666; margin-bottom: 6px; display: block;">🗓️ เลือกวันที่</label>
+            <input type="date" id="filter-date" class="form-input" style="padding: 10px;" onchange="filterByDate()">
+            <button onclick="clearFilter()" style="width: 100%; margin-top: 8px; padding: 8px; background: #e0e0e0; border: none; border-radius: 8px; cursor: pointer; font-size: 13px;">ทั้งหมด</button>
+        </div>
+        <div class="summary-stats">
+            <div class="stat-box">
+                <div class="stat-label">ขายออก</div>
+                <div class="stat-value sell" id="sell-profit">0฿</div>
+                <div class="stat-label" style="margin-top:4px;" id="sell-count">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">อื่นๆ</div>
+                <div class="stat-value buy" id="buy-profit">0฿</div>
+                <div class="stat-label" style="margin-top:4px;" id="buy-count">0</div>
+            </div>
+        </div>
+        <div class="summary-total">
+            <div class="summary-total-label">กำไรสุทธิรวม</div>
+            <div class="summary-total-value" id="total-profit">0฿</div>
+        </div>
+        <div id="transaction-list"></div>
+    </div>
+
+    <script>
+        var w=[{n:'0.1g',w:0.1,d:1.52,c:60,s:'60'},{n:'0.3g',w:0.3,d:4.56,c:60,s:'60'},{n:'0.6g',w:0.6,d:9.12,c:60,s:'60'},{n:'1.0g',w:1.0,d:15.2,c:100,s:'100'},{n:'ครึ่งสลึง',w:1.9,d:8,c:100,s:'80-120'},{n:'1สลึง',w:3.8,d:4,c:150,s:'150'},{n:'2สลึง',w:7.6,d:2,c:250,s:'250'},{n:'1บาท',w:15.2,d:null,c:300,s:'300',m:1},{n:'2บาท',w:30.4,d:null,c:500,s:'500',m:2},{n:'3บาท',w:45.6,d:null,c:1300,s:'1300',m:3}];
+        var sw=null,bw=null,ew=null,aw=null,t=[],so=false,fd=null;
+        function init(){['sell-weight-grid','buy-weight-grid','ex-weight-grid','add-weight-grid'].forEach(function(g){var e=document.getElementById(g);if(!e)return;e.innerHTML='';w.forEach(function(x,i){var d=document.createElement('div');d.className='weight-item';d.setAttribute('data-idx',i);d.setAttribute('data-grid',g);d.onclick=function(){sel(this.getAttribute('data-grid'),parseInt(this.getAttribute('data-idx')))};d.innerHTML='<div class="weight-name">'+x.n+'</div><div class="weight-detail">'+x.w+'g'+(g==='sell-weight-grid'||g==='ex-weight-grid'?' | '+x.s:'')+'</div>';e.appendChild(d)})});}
+        function sel(g,i){document.querySelectorAll('#'+g+' .weight-item').forEach(function(e){e.classList.remove('selected')});document.querySelectorAll('#'+g+' .weight-item')[i].classList.add('selected');if(g==='sell-weight-grid'){sw=w[i];document.getElementById('sell-special').value='0'}else if(g==='buy-weight-grid'){bw=w[i];document.getElementById('buy-actual-weight').value=bw.w}else if(g==='ex-weight-grid'){ew=w[i];document.getElementById('ex-actual-weight').value=ew.w}else if(g==='add-weight-grid')aw=w[i];}
+        function switchTab(x){document.querySelectorAll('.tab').forEach(function(e){e.classList.remove('active')});document.querySelectorAll('.tab-content').forEach(function(e){e.classList.remove('active')});document.getElementById('tab-'+x).classList.add('active');document.getElementById('content-'+x).classList.add('active');}
+        function switchServiceTab(x){document.querySelectorAll('.sub-tab').forEach(function(e){e.classList.remove('active')});document.getElementById('service-exchange').style.display='none';document.getElementById('service-addweight').style.display='none';document.getElementById('subtab-'+x).classList.add('active');document.getElementById('service-'+x).style.display='block';}
+        function toggleSummary(){so=document.getElementById('toggle-summary').checked;document.getElementById('summary-fab').classList.toggle('active',so);}
+        function calculateSell(){var a=parseFloat(document.getElementById('sell-price-top').value),b=parseFloat(document.getElementById('sell-price-bottom').value),c=parseFloat(document.getElementById('sell-special').value)||0,d=parseFloat(document.getElementById('sell-price-out').value);if(!sw||!a||!b||!d){alert('กรุณากรอกข้อมูลให้ครบถ้วน');return}if(a-b!==100){alert('ราคาทองต้องต่างกัน 100 บาท');return}var e=sw.d?a/sw.d:a*sw.m,f=sw.c+c,g=e+f,h=d-g;if(so)addTrans('ขายออก',sw.n,h);var r='<div class="result-row"><span class="result-label">น้ำหนัก</span><span class="result-value">'+sw.n+'</span></div><div class="result-row"><span class="result-label">ราคาทอง</span><span class="result-value">'+e.toFixed(2)+'฿</span></div><div class="result-row"><span class="result-label">กำเน็จ</span><span class="result-value">'+f+'฿</span></div><div class="result-row"><span class="result-label">ต้นทุน</span><span class="result-value">'+g.toFixed(2)+'฿</span></div><div class="result-row"><span class="result-label">ขายออก</span><span class="result-value">'+d+'฿</span></div><div class="profit-box"><div class="profit-label">กำไร</div><div class="profit-value">'+(h>=0?'+':'')+h.toFixed(2)+'฿</div></div>';document.getElementById('sell-result').innerHTML=r;document.getElementById('sell-result').classList.add('show');}
+        function calculateBuy(){var a=parseFloat(document.getElementById('buy-price-bottom').value),b=parseFloat(document.getElementById('buy-actual-weight').value),c=parseFloat(document.getElementById('buy-price-in').value);if(!bw||!a||!b||!c){alert('กรุณากรอกข้อมูลให้ครบถ้วน');return}var d=(a-2300)*0.0656*b,e=d-c;if(so)addTrans('ซื้อเข้า',bw.n+'('+b+'g)',e);var w='';if(b<bw.w){var f=bw.w-b,g=(a-2300)*0.0656*bw.w,h=g-d;w='<div class="warning-box"><div class="warning-title">⚠️ น้ำหนักขาด</div><div class="warning-text">ขาด '+f.toFixed(2)+'g<br>ต่าง '+h.toFixed(2)+'฿</div></div>'}var r='<div class="result-row"><span class="result-label">มาตรฐาน</span><span class="result-value">'+bw.n+'</span></div><div class="result-row"><span class="result-label">จริง</span><span class="result-value">'+b+'g</span></div><div class="result-row"><span class="result-label">ขายบริษัท</span><span class="result-value">'+d.toFixed(2)+'฿</span></div><div class="result-row"><span class="result-label">รับซื้อ</span><span class="result-value">'+c+'฿</span></div>'+w+'<div class="profit-box"><div class="profit-label">กำไร</div><div class="profit-value">'+(e>=0?'+':'')+e.toFixed(2)+'฿</div></div>';document.getElementById('buy-result').innerHTML=r;document.getElementById('buy-result').classList.add('show');}
+        function calculateExchange(){var a=parseFloat(document.getElementById('ex-gold-top').value),b=parseFloat(document.getElementById('ex-gold-bottom').value),c=parseFloat(document.getElementById('ex-actual-weight').value),d=parseFloat(document.getElementById('ex-price').value);if(!ew||!a||!b||!c||!d){alert('กรุณากรอกข้อมูลให้ครบถ้วน');return}if(a-b!==100){alert('ราคาทองต้องต่างกัน 100 บาท');return}var e=(b-2300)*0.0656*c,f=ew.d?a/ew.d:a*ew.m,g=f+ew.c,h=g-e,i=d-h;if(so)addTrans('เปลี่ยนลาย',ew.n,i);var w='';if(c<ew.w)w='<div class="warning-box"><div class="warning-title">⚠️ น้ำหนักขาด</div><div class="warning-text">ขาด '+(ew.w-c).toFixed(2)+'g</div></div>';var r='<div class="result-row"><span class="result-label">น้ำหนัก</span><span class="result-value">'+ew.n+'</span></div><div class="result-row"><span class="result-label">ของเก่า</span><span class="result-value">'+c+'g</span></div><div class="result-row"><span class="result-label">ขายบริษัท (ล่าง)</span><span class="result-value">'+e.toFixed(2)+'฿</span></div><div class="result-row"><span class="result-label">ทองใหม่ (บน)</span><span class="result-value">'+f.toFixed(2)+'฿</span></div><div class="result-row"><span class="result-label">กำเน็จ</span><span class="result-value">'+ew.c+'฿</span></div><div class="result-row"><span class="result-label">ต้นทุนใหม่</span><span class="result-value">'+g.toFixed(2)+'฿</span></div><div class="result-row"><span class="result-label">ต้นทุนสุทธิ</span><span class="result-value">'+h.toFixed(2)+'฿</span></div><div class="result-row"><span class="result-label">เก็บลูกค้า</span><span class="result-value">'+d+'฿</span></div>'+w+'<div class="profit-box"><div class="profit-label">กำไร</div><div class="profit-value">'+(i>=0?'+':'')+i.toFixed(2)+'฿</div></div>';document.getElementById('ex-result').innerHTML=r;document.getElementById('ex-result').classList.add('show');}
+        function calculateAddWeight(){var a=parseFloat(document.getElementById('add-gold-old-bottom').value),b=parseFloat(document.getElementById('add-weight-old').value),c=parseFloat(document.getElementById('add-gold-new-top').value),d=parseFloat(document.getElementById('add-price').value);if(!aw||!a||!b||!c||!d){alert('กรุณากรอกข้อมูลให้ครบถ้วน');return}var e=(a-2300)*0.0656*b,f=aw.d?c/aw.d:c*aw.m,g=f+aw.c,h=g-e,i=d-h;if(so)addTrans('เพิ่มน้ำหนัก',b+'g→'+aw.n,i);var r='<div class="result-row"><span class="result-label">ของเก่า</span><span class="result-value">'+b+'g</span></div><div class="result-row"><span class="result-label">ขายบริษัท (ล่าง)</span><span class="result-value">'+e.toFixed(2)+'฿</span></div><div class="result-row"><span class="result-label">ใหม่</span><span class="result-value">'+aw.n+'</span></div><div class="result-row"><span class="result-label">ทองใหม่ (บน)</span><span class="result-value">'+f.toFixed(2)+'฿</span></div><div class="result-row"><span class="result-label">กำเน็จใหม่</span><span class="result-value">'+aw.c+'฿</span></div><div class="result-row"><span class="result-label">ต้นทุนใหม่</span><span class="result-value">'+g.toFixed(2)+'฿</span></div><div class="result-row"><span class="result-label">ต้นทุนสุทธิ</span><span class="result-value">'+h.toFixed(2)+'฿</span></div><div class="result-row"><span class="result-label">เก็บลูกค้า</span><span class="result-value">'+d+'฿</span></div><div class="profit-box"><div class="profit-label">กำไร</div><div class="profit-value">'+(i>=0?'+':'')+i.toFixed(2)+'฿</div></div>';document.getElementById('add-result').innerHTML=r;document.getElementById('add-result').classList.add('show');}
+        function addTrans(ty,we,pr){var n=new Date(),d=n.toISOString().split('T')[0],dt=n.toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'});t.push({id:Date.now(),type:ty,weight:we,profit:pr,date:dt,dateISO:d,timestamp:n.getTime()});upd();}
+        function upd(){var tot=0,ts=0,tb=0,cs=0,cb=0,h='',f=fd?t.filter(function(x){return x.dateISO===fd}):t;if(f.length===0)h='<div class="empty-state"><div class="empty-icon">📭</div><div>'+(fd?'ไม่มีรายการ':'ยังไม่มี')+'</div></div>';else{for(var i=f.length-1;i>=0;i--){var x=f[i];tot+=x.profit;if(x.type==='ขายออก'){ts+=x.profit;cs++}else{tb+=x.profit;cb++}var c=x.profit>=0?'positive':'negative',p=(x.profit>=0?'+':'')+x.profit.toFixed(2);h+='<div class="transaction-item"><div class="transaction-info"><div class="transaction-type">'+x.type+'</div><div class="transaction-weight">'+x.weight+'</div><div class="transaction-date">📅'+x.date+'</div></div><div class="transaction-profit '+c+'">'+p+'฿</div><button class="btn-delete" onclick="delTrans('+x.id+')">ลบ</button></div>'}}document.getElementById('transaction-list').innerHTML=h;document.getElementById('total-profit').textContent=(tot>=0?'+':'')+tot.toFixed(2)+'฿';document.getElementById('sell-profit').textContent=(ts>=0?'+':'')+ts.toFixed(2)+'฿';document.getElementById('buy-profit').textContent=(tb>=0?'+':'')+tb.toFixed(2)+'฿';document.getElementById('sell-count').textContent=cs;document.getElementById('buy-count').textContent=cb;document.getElementById('fab-count').textContent=t.length;}
+        function filterByDate(){fd=document.getElementById('filter-date').value;upd();}
+        function clearFilter(){fd=null;document.getElementById('filter-date').value='';upd();}
+        function delTrans(id){t=t.filter(function(x){return x.id!==id});upd();}
+        function clearAll(){if(confirm('ล้างทั้งหมด?')){t=[];upd();}}
+        function showSummary(){document.getElementById('summary-panel').classList.add('show');}
+        function hideSummary(){document.getElementById('summary-panel').classList.remove('show');}
+        function downloadReport(){var n=new Date(),rd=fd?new Date(fd+'T00:00:00'):n,ds=rd.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'}),f=fd?t.filter(function(x){return x.dateISO===fd}):t,tot=0,ts=0,tb=0,cs=0,cb=0,r='='.repeat(50)+'\n📊 รายงานสรุปยอดกำไรทอง\n'+'='.repeat(50)+'\nวันที่: '+ds+'\n'+(fd?'📌 กรองเฉพาะวันที่\n':'')+'='.repeat(50)+'\n\n';if(f.length===0)r+='ไม่มีรายการ\n';else{r+='📋 รายการ ('+f.length+')\n'+'-'.repeat(50)+'\n\n';var si=[],bi=[];f.forEach(function(x){tot+=x.profit;if(x.type==='ขายออก'){ts+=x.profit;cs++;si.push(x)}else{tb+=x.profit;cb++;bi.push(x)}});if(si.length>0){r+='🔸 ขายออก ('+si.length+')\n'+'-'.repeat(50)+'\n';si.forEach(function(x,i){r+=(i+1)+'. '+x.weight+'\n   กำไร: '+(x.profit>=0?'+':'')+x.profit.toFixed(2)+'฿\n   '+x.date+'\n\n'});r+='รวม: '+(ts>=0?'+':'')+ts.toFixed(2)+'฿\n'+'='.repeat(50)+'\n\n'}if(bi.length>0){r+='🔹 อื่นๆ ('+bi.length+')\n'+'-'.repeat(50)+'\n';bi.forEach(function(x,i){r+=(i+1)+'. ['+x.type+'] '+x.weight+'\n   กำไร: '+(x.profit>=0?'+':'')+x.profit.toFixed(2)+'฿\n   '+x.date+'\n\n'});r+='รวม: '+(tb>=0?'+':'')+tb.toFixed(2)+'฿\n'+'='.repeat(50)+'\n\n'}r+='💰 สรุป\n'+'='.repeat(50)+'\nขายออก: '+cs+' = '+(ts>=0?'+':'')+ts.toFixed(2)+'฿\nอื่นๆ: '+cb+' = '+(tb>=0?'+':'')+tb.toFixed(2)+'฿\n'+'-'.repeat(50)+'\nรวม: '+(tot>=0?'+':'')+tot.toFixed(2)+'฿\n'+'='.repeat(50)+'\n'}var b=new Blob([r],{type:'text/plain;charset=utf-8'}),l=document.createElement('a');l.href=URL.createObjectURL(b);l.download='รายงาน_'+(fd||n.toISOString().slice(0,10))+'.txt';l.click();}
+        init();
+    </script>
+</body>
+</html>
